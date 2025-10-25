@@ -13,12 +13,16 @@ export default function Home() {
   const [session, setSession] = useState<{ name: string; date: string } | null>(null);
 
   useEffect(() => {
-    const user = getUser();
+  const loadData = async () => {
+    const user = await getUser();
     setCurrentUser(user);
     
-    const sessionData = getCurrentSession();
+    const sessionData = await getCurrentSession();
     setSession(sessionData);
-  }, []);
+  };
+  loadData();
+}, []);
+
 
   const handleStart = () => {
     if (!name.trim()) {

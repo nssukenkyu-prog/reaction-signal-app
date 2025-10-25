@@ -17,15 +17,17 @@ export default function RankingPage() {
   const [session, setSession] = useState<{ name: string; date: string } | null>(null);
 
   useEffect(() => {
-    const currentUser = getUser();
+  const loadUser = async () => {
+    const currentUser = await getUser();
+    if (!currentUser) {
+      router.push('/');
+      return;
+    }
     setUser(currentUser);
-    
-    const allRecords = getRecords();
-    setRecords(allRecords);
-    
-    const sessionData = getCurrentSession();
-    setSession(sessionData);
-  }, []);
+  };
+  loadUser();
+}, [router]);
+
 
   // フィルタリングとソート
   const filteredRecords = records

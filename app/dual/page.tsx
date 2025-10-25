@@ -35,13 +35,16 @@ export default function DualPage() {
   const totalTrials = difficulty === 'easy' ? 15 : difficulty === 'medium' ? 20 : 25;
 
   useEffect(() => {
-    const currentUser = getUser();
+  const loadUser = async () => {
+    const currentUser = await getUser();
     if (!currentUser) {
       router.push('/');
       return;
     }
     setUser(currentUser);
-  }, [router]);
+  };
+  loadUser();
+}, [router]);
 
   const getRandomColor = useCallback((): Color => {
     const colors: Color[] = ['green', 'red'];

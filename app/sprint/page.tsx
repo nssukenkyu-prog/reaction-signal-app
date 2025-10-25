@@ -20,13 +20,17 @@ export default function SprintPage() {
   const totalTrials = 5;
 
   useEffect(() => {
-    const currentUser = getUser();
+  const loadUser = async () => {
+    const currentUser = await getUser();
     if (!currentUser) {
       router.push('/');
       return;
     }
     setUser(currentUser);
-  }, [router]);
+  };
+  loadUser();
+}, [router]);
+
 
   const startGame = useCallback(() => {
     setGameState('ready');
