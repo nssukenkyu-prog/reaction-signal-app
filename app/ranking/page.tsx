@@ -100,9 +100,7 @@ export default function RankingPage() {
           <div className="text-center">
             <div className="text-5xl mb-3">🏆</div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">ランキング</h1>
-            {session && (
-              <p className="text-sm text-gray-600">{session.name}</p>
-            )}
+            
           </div>
         </div>
       </div>

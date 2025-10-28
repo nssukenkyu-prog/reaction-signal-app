@@ -290,7 +290,7 @@ export default function SimplePage() {
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                 <p className="text-sm opacity-80 mb-1">安定性</p>
                 <p className="text-2xl font-bold">{stats.consistency}</p>
-                <p className="text-xs opacity-80">標準偏差: {stats.stdDev}ms</p>
+                <p className="text-xs opacity-80">標準偏差: {(stats.stdDev/1000).toFixed(3)}s</p>
               </div>
             </div>
 
@@ -326,7 +326,7 @@ export default function SimplePage() {
                         }`}
                         style={{ width: `${Math.min((time / 400) * 100, 100)}%` }}
                       >
-                        {time}ms
+                        {(time/1000).toFixed(3)}s
                       </div>
                     </div>
                   </div>
