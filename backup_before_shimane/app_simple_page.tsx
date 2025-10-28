@@ -2,20 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser, addRecord } from '@/lib/storage';
-import { evaluateReactionTime, calculateStats } from '@/lib/evaluation';
+import { getUser, addRecord, getRecordsByUser } from '@/lib/storage';
+import { evaluateReactionTime, calculateSprintImpact, calculateStats } from '@/lib/evaluation';
 import { User } from '@/lib/types';
 
-type GameState = 'intro' | 'ready' | 'set' | 'go' | 'result' | 'complete';
+type GameState = 'intro' | 'ready' | 'waiting' | 'go' | 'result' | 'complete';
 
-export default function SprintPage() {
+export default function SimplePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [gameState, setGameState] = useState<GameState>('intro');
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [currentTrial, setCurrentTrial] = useState(0);
   const [startTime, setStartTime] = useState(0);
-  const [falseStart, setFalseStart] = useState(false);
+  const [tooEarly, setTooEarly] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   const totalTrials = 5;
 
@@ -34,43 +35,38 @@ export default function SprintPage() {
 
   const startGame = useCallback(() => {
     setGameState('ready');
-    setTimeout(() => {
-      startTrial();
-    }, 2000);
+    setCountdown(3);
+    
+    // カウントダウン
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          startTrial();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   }, []);
 
   const startTrial = useCallback(() => {
-    setGameState('ready');
-    setFalseStart(false);
-
-    // 「位置について」
+    setGameState('waiting');
+    setTooEarly(false);
+    
+    // ランダムな待機時間(2-5秒)
+    const waitTime = 2000 + Math.random() * 3000;
+    
     setTimeout(() => {
-      setGameState('set');
-
-      // 「ヨーイ」→「ドン!」(ランダム1-3秒)
-      const setTime = 1000 + Math.random() * 2000;
-      setTimeout(() => {
-        setStartTime(Date.now());
-        setGameState('go');
-        
-        // ピストン音を鳴らす(音声がある場合)
-        playStartSound();
-      }, setTime);
-    }, 1500);
+      setStartTime(Date.now());
+      setGameState('go');
+    }, waitTime);
   }, []);
 
-  const playStartSound = () => {
-    // 将来的に音声ファイルを追加
-    // const audio = new Audio('/sounds/pistol.mp3');
-    // audio.play();
-  };
-
   const handleTap = useCallback(() => {
-    if (gameState === 'ready' || gameState === 'set') {
-      // フライング
-      setFalseStart(true);
-      setGameState('result');
-      
+    if (gameState === 'waiting') {
+      // お手つき
+      setTooEarly(true);
       setTimeout(() => {
         if (currentTrial < totalTrials - 1) {
           setCurrentTrial((prev) => prev + 1);
@@ -78,29 +74,12 @@ export default function SprintPage() {
         } else {
           finishGame();
         }
-      }, 2500);
+      }, 2000);
       return;
     }
 
     if (gameState === 'go') {
       const reactionTime = Date.now() - startTime;
-      
-      // フライング判定(100ms以内は不自然)
-      if (reactionTime < 100) {
-        setFalseStart(true);
-        setGameState('result');
-        
-        setTimeout(() => {
-          if (currentTrial < totalTrials - 1) {
-            setCurrentTrial((prev) => prev + 1);
-            startTrial();
-          } else {
-            finishGame();
-          }
-        }, 2500);
-        return;
-      }
-
       const newTimes = [...reactionTimes, reactionTime];
       setReactionTimes(newTimes);
       setGameState('result');
@@ -118,14 +97,15 @@ export default function SprintPage() {
 
   const finishGame = useCallback(() => {
     setGameState('complete');
-
+    
+    // 記録を保存
     if (user && reactionTimes.length > 0) {
       const stats = calculateStats(reactionTimes);
       if (stats) {
         addRecord({
           userId: user.id,
           userName: user.name,
-          mode: 'sprint',
+          mode: 'simple',
           reactionTime: stats.average,
         });
       }
@@ -136,13 +116,16 @@ export default function SprintPage() {
     setGameState('intro');
     setReactionTimes([]);
     setCurrentTrial(0);
-    setFalseStart(false);
+    setTooEarly(false);
   };
 
   const stats = reactionTimes.length > 0 ? calculateStats(reactionTimes) : null;
   const evaluation = stats ? evaluateReactionTime(stats.average) : null;
+  const sprintImpact = stats ? calculateSprintImpact(stats.average) : null;
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -158,10 +141,10 @@ export default function SprintPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 mb-1">
-                🏃 スタートダッシュモード
+                📱 シンプル反応モード
               </h1>
               <p className="text-sm text-gray-600">
-                陸上競技のスタート練習!
+                緑色に変わったら素早くタップ!
               </p>
             </div>
             <div className="text-right">
@@ -194,31 +177,28 @@ export default function SprintPage() {
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
         {gameState === 'intro' && (
           <div className="p-12 text-center">
-            <div className="text-6xl mb-6">🏃‍♂️</div>
+            <div className="text-6xl mb-6">⚡</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              スタートダッシュ練習
+              反応速度テスト
             </h2>
             <div className="mb-8 space-y-3 text-left max-w-md mx-auto bg-blue-50 p-6 rounded-lg">
               <h3 className="font-bold text-blue-900 mb-3">📖 ルール説明</h3>
               <p className="text-sm text-gray-700">
-                <span className="font-bold">1.</span> 陸上競技のスタートをシミュレーション
+                <span className="font-bold">1.</span> 灰色の画面が表示されます
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-bold">2.</span> 「位置について」→「ヨーイ」→<span className="text-red-600 font-bold">「ドン!」</span>
+                <span className="font-bold">2.</span> ランダムなタイミングで緑色に変わります
               </p>
               <p className="text-sm text-gray-700">
-                <span className="font-bold">3.</span> ピストン音が鳴ったら素早くタップ!
+                <span className="font-bold">3.</span> 緑色になったら素早くタップ!
               </p>
               <p className="text-sm text-red-600 font-bold">
-                ⚠️ 音が鳴る前にタップするとフライング失格!
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
-                ※本物のスタート音声で臨場感たっぷり!
+                ⚠️ フライング(早すぎるタップ)は失格!
               </p>
             </div>
             <button
               onClick={startGame}
-              className="bg-gradient-to-r from-red-500 to-red-600 text-white px-12 py-4 rounded-full text-xl font-bold hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-12 py-4 rounded-full text-xl font-bold hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
             >
               スタート! 🚀
             </button>
@@ -226,25 +206,24 @@ export default function SprintPage() {
         )}
 
         {gameState === 'ready' && (
-          <button
-            onClick={handleTap}
-            className="w-full h-96 bg-blue-500 hover:bg-blue-600 transition-colors flex items-center justify-center cursor-pointer"
-          >
+          <div className="h-96 flex items-center justify-center bg-yellow-400">
             <div className="text-center">
-              <div className="text-5xl text-white font-bold mb-4">位置について</div>
-              <p className="text-white text-lg">画面に集中...</p>
+              <div className="text-9xl font-bold text-white mb-4 animate-bounce">
+                {countdown}
+              </div>
+              <p className="text-2xl text-white font-bold">準備...</p>
             </div>
-          </button>
+          </div>
         )}
 
-        {gameState === 'set' && (
+        {gameState === 'waiting' && (
           <button
             onClick={handleTap}
-            className="w-full h-96 bg-yellow-500 hover:bg-yellow-600 transition-colors flex items-center justify-center cursor-pointer"
+            className="w-full h-96 bg-gray-400 hover:bg-gray-500 transition-colors flex items-center justify-center cursor-pointer"
           >
             <div className="text-center">
-              <div className="text-6xl text-white font-bold mb-4">ヨーイ...</div>
-              <p className="text-white text-lg">待て...</p>
+              <div className="text-4xl text-white font-bold">待て...</div>
+              <p className="text-white mt-4">緑色になるまで待って!</p>
             </div>
           </button>
         )}
@@ -252,18 +231,17 @@ export default function SprintPage() {
         {gameState === 'go' && (
           <button
             onClick={handleTap}
-            className="w-full h-96 bg-red-600 hover:bg-red-700 transition-colors flex items-center justify-center cursor-pointer animate-pulse"
+            className="w-full h-96 bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center cursor-pointer animate-pulse"
           >
             <div className="text-center">
-              <div className="text-8xl mb-6">🔫</div>
-              <div className="text-7xl text-white font-bold mb-4">ドン!</div>
-              <p className="text-white text-2xl">タップ!</p>
+              <div className="text-6xl text-white font-bold mb-4">タップ!</div>
+              <div className="text-9xl">👆</div>
             </div>
           </button>
         )}
 
-        {gameState === 'result' && !falseStart && reactionTimes.length > 0 && (
-          <div className="h-96 flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600">
+        {gameState === 'result' && !tooEarly && reactionTimes.length > 0 && (
+          <div className="h-96 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
             <div className="text-center text-white">
               <div className="text-6xl mb-4">
                 {evaluateReactionTime(reactionTimes[reactionTimes.length - 1]).emoji}
@@ -275,84 +253,63 @@ export default function SprintPage() {
               <div className="text-2xl font-bold">
                 {evaluateReactionTime(reactionTimes[reactionTimes.length - 1]).label}
               </div>
-              <p className="text-sm mt-2 opacity-90">スタート反応時間</p>
             </div>
           </div>
         )}
 
-        {falseStart && (
-          <div className="h-96 flex items-center justify-center bg-black">
+        {tooEarly && (
+          <div className="h-96 flex items-center justify-center bg-red-500">
             <div className="text-center text-white">
               <div className="text-6xl mb-4">❌</div>
-              <div className="text-5xl font-bold mb-4 text-red-500">フライング!</div>
-              <p className="text-xl">失格です</p>
-              <p className="text-sm mt-4 opacity-80">
-                スタート音が鳴る前にタップしました
-              </p>
+              <div className="text-4xl font-bold mb-2">フライング!</div>
+              <p className="text-xl">緑色になる前にタップしました</p>
             </div>
           </div>
         )}
 
-        {gameState === 'complete' && stats && evaluation && (
+        {gameState === 'complete' && stats && evaluation && sprintImpact && (
           <div className="p-8">
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">{evaluation.emoji}</div>
               <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                練習完了!
+                テスト完了!
               </h2>
               <p className="text-gray-600">{evaluation.message}</p>
             </div>
 
             {/* 統計 */}
             <div className="grid md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
                 <p className="text-sm opacity-80 mb-1">平均反応時間</p>
                 <p className="text-4xl font-bold">{stats.average}<span className="text-xl">ms</span></p>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-                <p className="text-sm opacity-80 mb-1">最速スタート</p>
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+                <p className="text-sm opacity-80 mb-1">最速記録</p>
                 <p className="text-4xl font-bold">{stats.fastest}<span className="text-xl">ms</span></p>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
                 <p className="text-sm opacity-80 mb-1">安定性</p>
                 <p className="text-2xl font-bold">{stats.consistency}</p>
-                <p className="text-xs opacity-80">±{stats.stdDev}ms</p>
+                <p className="text-xs opacity-80">標準偏差: {(stats.stdDev/1000).toFixed(3)}s</p>
               </div>
             </div>
 
-            {/* スプリント分析 */}
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-orange-300 rounded-xl p-6 mb-8">
-              <h3 className="font-bold text-orange-900 mb-3 flex items-center text-lg">
-                🏃‍♂️ スプリント分析
+            {/* 50m走への影響 */}
+            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-8">
+              <h3 className="font-bold text-yellow-900 mb-3 flex items-center">
+                🏃‍♂️ 50m走への影響
               </h3>
-              <div className="space-y-3">
-                <div className="bg-white rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">スタートでのロス時間</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    約 {(stats.average / 1000).toFixed(3)} 秒
-                  </p>
-                </div>
-                {stats.average > 150 && (
-                  <div className="bg-white rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">改善ポテンシャル</p>
-                    <p className="text-lg text-gray-800">
-                      理想値(150ms)まで改善すれば<br/>
-                      <span className="text-red-600 font-bold text-2xl">
-                        {((stats.average - 150) / 1000).toFixed(3)}秒
-                      </span> 速くなる!
-                    </p>
-                  </div>
-                )}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-xs text-blue-800 font-bold mb-2">💡 改善のヒント</p>
-                  <ul className="text-xs text-blue-900 space-y-1">
-                    <li>• ピストン音に全神経を集中</li>
-                    <li>• リラックスした状態で構える</li>
-                    <li>• 音が鳴る瞬間を「予測」せずに「反応」する</li>
-                    <li>• 毎日練習すれば必ず速くなる!</li>
-                  </ul>
-                </div>
-              </div>
+              <p className="text-sm text-gray-700 mb-2">
+                <span className="font-bold">スタートでのロス:</span> 約{sprintImpact.startAdvantage}秒
+              </p>
+              {sprintImpact.improvementPotential > 0 && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-bold">改善の余地:</span> 反応時間を理想値(150ms)まで改善すれば、
+                  <span className="text-red-600 font-bold"> {sprintImpact.improvementPotential}秒 </span>
+                  速くなる可能性!
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-3">{evaluation.sprintImpact}</p>
             </div>
 
             {/* 記録グラフ */}
@@ -365,11 +322,11 @@ export default function SprintPage() {
                     <div className="flex-1 bg-white rounded-full h-8 overflow-hidden relative">
                       <div
                         className={`h-full flex items-center justify-end px-3 text-white text-sm font-bold transition-all ${
-                          time <= 150 ? 'bg-green-500' : time <= 200 ? 'bg-blue-500' : 'bg-orange-500'
+                          time <= 200 ? 'bg-green-500' : time <= 250 ? 'bg-blue-500' : 'bg-gray-400'
                         }`}
                         style={{ width: `${Math.min((time / 400) * 100, 100)}%` }}
                       >
-                        {time}ms
+                        {(time/1000).toFixed(3)}s
                       </div>
                     </div>
                   </div>
@@ -381,9 +338,9 @@ export default function SprintPage() {
             <div className="flex space-x-4">
               <button
                 onClick={resetGame}
-                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition-all"
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold hover:from-green-600 hover:to-green-700 transition-all"
               >
-                もう一度練習 🔄
+                もう一度チャレンジ 🔄
               </button>
               <button
                 onClick={() => router.push('/ranking')}

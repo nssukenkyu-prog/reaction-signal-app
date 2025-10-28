@@ -148,7 +148,6 @@ export default function Home() {
             </p>
             <div className="flex items-center space-x-2">
               <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">認知</span>
-              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">判断</span>
               <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">行動</span>
             </div>
           </button>
@@ -188,7 +187,7 @@ export default function Home() {
               <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">認知</span>
               <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">判断</span>
               <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">行動</span>
-              
+              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">NEW!</span>
             </div>
           </button>
 
@@ -201,7 +200,9 @@ export default function Home() {
               <h3 className="text-2xl font-bold text-gray-800 flex items-center">
                 🏆 ランキング
               </h3>
-              
+              <p className="text-sm text-gray-700 mt-1">
+                みんなの記録を見て、目標を立てよう！
+              </p>
             </div>
             <button
               onClick={() => router.push('/ranking')}

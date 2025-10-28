@@ -116,8 +116,8 @@ export default function RankingPage() {
             <div className="text-right">
               <p className="text-sm opacity-80 mb-1">ベスト記録</p>
               <p className="text-4xl font-bold">
-                {(userBestRecord.reactionTime / 1000).toFixed(3)}
-                <span className="text-xl">s</span>
+                {userBestRecord.reactionTime}
+                <span className="text-xl">ms</span>
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function RankingPage() {
       {/* フィルター */}
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
         <h3 className="font-bold text-gray-800 mb-4">📊 モード選択</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <button
             onClick={() => setModeFilter('simple')}
             className={`py-3 px-4 rounded-lg font-semibold transition-all ${
@@ -148,7 +148,16 @@ export default function RankingPage() {
           >
             🎨 カラー
           </button>
-          
+          <button
+            onClick={() => setModeFilter('sprint')}
+            className={`py-3 px-4 rounded-lg font-semibold transition-all ${
+              modeFilter === 'sprint'
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            🏃 スプリント
+          </button>
           <button
             onClick={() => setModeFilter('dual')}
             className={`py-3 px-4 rounded-lg font-semibold transition-all ${
@@ -233,9 +242,9 @@ export default function RankingPage() {
 
                   {/* 記録 */}
                   <div className="text-right">
-                    <p className="text-xl font-bold text-gray-800">
-                      {(record.reactionTime / 1000).toFixed(3)}
-                      <span className="text-sm text-gray-500 ml-1">s</span>
+                    <p className="text-2xl font-bold text-gray-800">
+                      {record.reactionTime}
+                      <span className="text-sm text-gray-500 ml-1">ms</span>
                     </p>
                     {record.accuracy !== undefined && (
                       <p className="text-xs text-gray-500">正確率: {record.accuracy}%</p>
@@ -255,18 +264,18 @@ export default function RankingPage() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm opacity-80">参加者数</p>
-              <p className="text-xl font-bold">
+              <p className="text-2xl font-bold">
                 {new Set(filteredRecords.map(r => r.userId)).size}人
               </p>
             </div>
             <div>
               <p className="text-sm opacity-80">平均タイム</p>
-              <p className="text-xl font-bold">
-                {(
+              <p className="text-2xl font-bold">
+                {Math.round(
                   filteredRecords.reduce((sum, r) => sum + r.reactionTime, 0) /
-                    filteredRecords.length / 1000
-                ).toFixed(3)}
-                <span className="text-sm">s</span>
+                    filteredRecords.length
+                )}
+                <span className="text-sm">ms</span>
               </p>
             </div>
             <div>

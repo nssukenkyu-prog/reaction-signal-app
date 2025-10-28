@@ -141,14 +141,13 @@ export default function Home() {
           >
             <div className="text-4xl mb-3">📱</div>
             <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600">
-              シンプル反応
+              シンプル反応・判断
             </h3>
             <p className="text-sm text-gray-600 mb-3">
               シグナルに反応する速さを測定
             </p>
             <div className="flex items-center space-x-2">
               <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">認知</span>
-              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">判断</span>
               <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">行動</span>
             </div>
           </button>

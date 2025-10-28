@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "リアクショントレーニングシステム",
-  description: "島根県大田市内の方々にご利用いただけますするWebアプリケーション",
+  description: "認知・判断・行動を科学的にトレーニングするWebアプリケーション",
 };
 
 export default function RootLayout({
@@ -23,10 +23,10 @@ export default function RootLayout({
             <div className="container mx-auto px-4 py-4">
               <div className="flex flex-col items-center text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                  ⚡リアクショントレーニングシステム⚡<br />⛰️島根県大田市限定版⛰️
+                  ⚡ リアクショントレーニングシステム
                 </h1>
                 <p className="text-xs md:text-sm text-gray-500 max-w-2xl">
-                  本システムは2025年11月9日開催の<br />島根県大田市と学校法人日本体育大学の<br />自治体連携協定推進事業に際して作成されました。
+                  本システムは2025年11月9日開催の島根県大田市と学校法人日本体育大学の自治体連携協定推進事業に際して作成されました。
                 </p>
                 <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-500">
                   <span className="bg-red-100 text-red-700 px-2 py-1 rounded">認知</span>
@@ -46,10 +46,10 @@ export default function RootLayout({
           <footer className="bg-gray-800 text-white py-6 mt-16">
             <div className="container mx-auto px-4 text-center">
               <p className="text-sm">
-                島根県大田市内の方々にご利用いただけます
+                認知・判断・行動を科学的にトレーニング
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                Built by Kedo Bot and Yuzu Bot / NSSU
+                © 2025 島根県大田市 × 学校法人日本体育大学 自治体連携協定推進事業
               </p>
             </div>
           </footer>
