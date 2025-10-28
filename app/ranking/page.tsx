@@ -17,16 +17,29 @@ export default function RankingPage() {
   const [session, setSession] = useState<{ name: string; date: string } | null>(null);
 
   useEffect(() => {
-  const loadUser = async () => {
-    const currentUser = await getUser();
-    if (!currentUser) {
-      router.push('/');
-      return;
-    }
-    setUser(currentUser);
-  };
-  loadUser();
-}, [router]);
+    const loadData = async () => {
+      console.log('🔍 ランキングデータ読み込み開始');
+      
+      const currentUser = await getUser();
+      if (!currentUser) {
+        router.push('/');
+        return;
+      }
+      setUser(currentUser);
+      
+      // 全記録を取得
+      const allRecords = await getRecords();
+      console.log('📊 取得した全記録数:', allRecords.length);
+      console.log('📋 取得したデータ:', allRecords);
+      setRecords(allRecords);
+      
+      // セッション情報を取得
+      const sessionData = await getCurrentSession();
+      setSession(sessionData);
+    };
+    
+    loadData();
+  }, [router]);
 
 
   // フィルタリングとソート
