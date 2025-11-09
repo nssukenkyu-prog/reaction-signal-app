@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "reaction-signal-c83ads2dp-nssukenkyu-progs-projects.vercel.app"
+        }
+      ],
+      "destination": "https://reaction-signal-app.vercel.app/:path*",
+      "permanent": true
+    }
+  ]
+}
