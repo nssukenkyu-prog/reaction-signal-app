@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import RedirectHandler from "./components/RedirectHandler";  // ← 追加
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={inter.className}>
+        <RedirectHandler />  {/* ← 追加 */}
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
           {/* ヘッダー */}
           <header className="bg-white shadow-md border-b-4 border-red-600">
